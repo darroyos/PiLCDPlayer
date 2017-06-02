@@ -1,8 +1,9 @@
 #!/usr/bin/python
 
+import sys
+sys.path.insert(0, 'libs/')
 import I2C_LCD_driver
 import time
-import sys
 import os
 import threading
 import signal
