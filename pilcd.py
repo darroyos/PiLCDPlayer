@@ -1,5 +1,10 @@
 #!/usr/bin/python
 
+"""
+How to terminate running Python threads using signals
+https://www.g-loaded.eu/2016/11/24/how-to-terminate-running-python-threads-using-signals/
+"""
+
 import sys
 sys.path.insert(0, 'libs/')
 import I2C_LCD_driver
@@ -36,6 +41,8 @@ class LCDJob(threading.Thread):
                 my_long_string = str_pad + self.videoTitle
 
                 while True and not self.shutdown_flag.is_set():
+                    mylcd.lcd_display_string("Playing now...", 2)
+
                     for i in range (0, len(my_long_string)):
                         lcd_text = my_long_string[i:(i+16)]
                         mylcd.lcd_display_string(lcd_text,1)
