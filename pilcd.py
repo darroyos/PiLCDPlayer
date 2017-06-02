@@ -57,7 +57,7 @@ class LCDJob(threading.Thread):
 
 class YoutubeJob(threading.Thread):
 
-    def __init__(self, videoTitle):
+    def __init__(self, videoTitle, lcd_thread):
         threading.Thread.__init__(self)
 
         # The shutdown_flag is a threading.Event object that
@@ -66,6 +66,7 @@ class YoutubeJob(threading.Thread):
 
         # ... Other thread setup code here ...
         self.videoTitle = videoTitle
+        self.lcd_thread = lcd_thread
 
     def run(self):
             print('Thread #%s started' % self.ident)
@@ -74,6 +75,8 @@ class YoutubeJob(threading.Thread):
 
             # ... Clean shutdown code here ...
             print('Thread #%s stopped' % self.ident)
+            self.lcd_thread.shutdown_flag.set()
+
 
 class ServiceExit(Exception):
     """
@@ -109,17 +112,18 @@ def main():
         try:
             lcd_thread = LCDJob(title)
             lcd_thread.start()
-            youtube_thread = YoutubeJob(title)
+            youtube_thread = YoutubeJob(title, lcd_thread)
             youtube_thread.start()
 
             # Keep the main thread running, otherwise signals are ignored.
-            while True:
-                time.sleep(0.5)
+            # while True:
+            #    time.sleep(0.5)
 
         except ServiceExit:
             # Terminate the running threads.
             # Set the shutdown flag on each thread to trigger a clean shutdown of each thread.
             lcd_thread.shutdown_flag.set()
+            youtube_thread.shutdown_flag.set()
             # Wait for the threads to close...
             lcd_thread.join()
             youtube_thread.join()
