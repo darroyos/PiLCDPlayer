@@ -177,6 +177,7 @@ def main():
                 # Wait for the threads to close...
                 lcd_thread.join()
                 youtube_thread.join()
+
         else:
             print "Bad syntax!"
             usage()

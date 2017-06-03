@@ -5,8 +5,8 @@ import java.io.InputStreamReader;
 
 public class ExecutePythonScript {
 	
-	public static void executeCommand(String videoTitle, int lcdEnabled, String address, int port) {
-		String command = "./pyled.py -e " + lcdEnabled + " -a " + address + " -p " + port
+	public static void executeCommand(String videoTitle, String lcdEnabled, String address, String port) {
+		String command = "python /usr/local/bin/pilcd.py -e " + lcdEnabled + " -a " + address + " -p " + port
 				+ " -t " + videoTitle;
 
 		String output = executeCommand(command);

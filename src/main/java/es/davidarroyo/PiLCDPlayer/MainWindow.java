@@ -208,9 +208,9 @@ public class MainWindow extends JFrame {
 			
 			try {
 				ExecutePythonScript.executeCommand(MainWindow.this.videoTitleField.getText(),
-						Integer.parseInt(MainWindow.this.lcdEnableField.getSelection().getActionCommand()),
+						MainWindow.this.lcdEnableField.getSelection().getActionCommand(),
 						MainWindow.this.lcdAddressField.getText(),
-						Integer.parseInt(MainWindow.this.lcdPortField.getText()));
+						MainWindow.this.lcdPortField.getText());
 			} catch (NumberFormatException e1) {
 				JOptionPane.showMessageDialog(MainWindow.this, "Please, insert a correct number"
 						, "Number format error", JOptionPane.INFORMATION_MESSAGE);
