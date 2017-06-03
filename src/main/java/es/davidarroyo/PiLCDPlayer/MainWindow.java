@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.*;
 
@@ -12,6 +14,11 @@ public class MainWindow extends JFrame {
 	private static final long serialVersionUID = 655909294400809589L;
 	
 	private static MainWindow mainWindow = null;
+	
+	private JTextField videoTitleField;
+	private ButtonGroup lcdEnableField;
+	private JTextField lcdPortField;
+	private JTextField lcdAddressField;
 	
 	/**
 	 * @return The unique instance of the window (Singleton pattern)
@@ -58,6 +65,7 @@ public class MainWindow extends JFrame {
 		JPanel playPanel = new JPanel();
 		JButton play = new JButton("Play video!");
 		play.setIcon(Utils.createImage("images/play.png", 32, 32));
+		play.addActionListener(new PlayButtonListener());
 		playPanel.add(play);
 		
 		main.add(playPanel);
@@ -103,9 +111,9 @@ public class MainWindow extends JFrame {
 			searchBoxPanel.add(searchLabel);
 			
 			// Search text field
-			JTextField searchField = new JTextField(20);
-			searchField.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 15));
-			searchBoxPanel.add(searchField);
+			MainWindow.this.videoTitleField = new JTextField(20);
+			MainWindow.this.videoTitleField.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 15));
+			searchBoxPanel.add(MainWindow.this.videoTitleField);
 			
 			// Search icon
 			JLabel searchIcon = new JLabel(Utils.createImage("images/search_icon.png", 42, 42));
@@ -138,12 +146,14 @@ public class MainWindow extends JFrame {
 			JPanel enableButtons = new JPanel(new FlowLayout());
 			
 			JRadioButton enable = new JRadioButton("Enable");
+			enable.setActionCommand("1");
 			JRadioButton disable = new JRadioButton("Disable");
+			disable.setActionCommand("0");
 			disable.setSelected(true);
 			
-			ButtonGroup group = new ButtonGroup();
-			group.add(enable);
-			group.add(disable);
+			MainWindow.this.lcdEnableField = new ButtonGroup();
+			MainWindow.this.lcdEnableField.add(enable);
+			MainWindow.this.lcdEnableField.add(disable);
 			
 			enableButtons.add(enable);
 			enableButtons.add(disable);
@@ -161,10 +171,10 @@ public class MainWindow extends JFrame {
 			busLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 15));
 			busFieldPanel.add(busLabel);
 			
-			JTextField busField = new JTextField(5);
-			busField.setText("1");
-			busField.setToolTipText("Default value for most devices (newer ones)");
-			busFieldPanel.add(busField);
+			MainWindow.this.lcdPortField = new JTextField(5);
+			MainWindow.this.lcdPortField.setText("1");
+			MainWindow.this.lcdPortField.setToolTipText("Default value for most devices (newer ones)");
+			busFieldPanel.add(MainWindow.this.lcdPortField);
 			this.add(busFieldPanel);
 			
 			JPanel busHelpTitle = new JPanel();
@@ -183,11 +193,29 @@ public class MainWindow extends JFrame {
 			addrLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 15));
 			addrFieldPanel.add(addrLabel);
 			
-			JTextField addrField = new JTextField(15);
-			addrField.setText("0x27");
-			addrField.setToolTipText("Default value for most devices");
-			addrFieldPanel.add(addrField);
+			MainWindow.this.lcdAddressField = new JTextField(15);
+			MainWindow.this.lcdAddressField.setText("0x27");
+			MainWindow.this.lcdAddressField.setToolTipText("Default value for most devices");
+			addrFieldPanel.add(MainWindow.this.lcdAddressField);
 			this.add(addrFieldPanel);
 		}
+	}
+	
+	private class PlayButtonListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			
+			try {
+				ExecutePythonScript.executeCommand(MainWindow.this.videoTitleField.getText(),
+						Integer.parseInt(MainWindow.this.lcdEnableField.getSelection().getActionCommand()),
+						MainWindow.this.lcdAddressField.getText(),
+						Integer.parseInt(MainWindow.this.lcdPortField.getText()));
+			} catch (NumberFormatException e1) {
+				JOptionPane.showMessageDialog(MainWindow.this, "Please, insert a correct number"
+						, "Number format error", JOptionPane.INFORMATION_MESSAGE);
+			}
+		}
+		
 	}
 }
