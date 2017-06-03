@@ -13,14 +13,14 @@ import signal
 import I2C_LCD_driver
 
 # Constants
-NUM_ARGUMENTS = 3
+NUM_ARGUMENTS = 9
 
 class LCDJob(threading.Thread):
     """
     Thread that loops showing the searched video on the LCD display
     """
 
-    def __init__(self, video_title):
+    def __init__(self, video_title, address, port):
         threading.Thread.__init__(self)
 
         # The shutdown_flag is a threading.Event object that
@@ -29,6 +29,8 @@ class LCDJob(threading.Thread):
 
         # ... Other thread setup code here ...
         self.video_title = video_title
+        self.address = address
+        self.port = port
 
     def run(self):
         print 'Thread #%s started' % self.ident
@@ -37,10 +39,10 @@ class LCDJob(threading.Thread):
             # ... Job code here ...
             time.sleep(0.5)
 
-            mylcd = I2C_LCD_driver.lcd()
+            mylcd = I2C_LCD_driver.lcd(self.address, self.port)
 
             str_pad = " " * 16
-            my_long_string = str_pad + self.videoTitle
+            my_long_string = str_pad + self.video_title
 
             while True and not self.shutdown_flag.is_set():
                 mylcd.lcd_display_string("Playing now...", 2)
@@ -117,32 +119,67 @@ def main():
         It prints the correct script arguments
         """
         print "Correct syntax to play a Youtube video:"
-        print "\tpilcd -t \"title of the video\""
+        print """\t./pilcd.py -e 0(lcd disable) 1(lcd enabled) -a LCDADDRESS
+                -p I2CBUS -t \"title of the video\""""
 
 
     if len(sys.argv) != NUM_ARGUMENTS:
         usage()
     else:
-        title = sys.argv[2] # title to display on the LCD
+        index = 1
+        enable_appeared = False
+        address_appeared = False
+        port_appeared = False
+        title_appeared = False
 
-        try:
-            lcd_thread = LCDJob(title)
-            lcd_thread.start()
-            youtube_thread = YoutubeJob(title, lcd_thread)
-            youtube_thread.start()
+        # Arguments parser
+        while index < NUM_ARGUMENTS - 1:
+            if sys.argv[index] == "-e" and not enable_appeared:
+                lcd_enable = sys.argv[index + 1]
+                enable_appeared = True
+            elif sys.argv[index] == "-a" and not address_appeared:
+                lcd_address = sys.argv[index + 1]
+                address_appeared = True
+            elif sys.argv[index] == "-p" and not port_appeared:
+                lcd_port = sys.argv[index + 1]
+                port_appeared = True
+            elif sys.argv[index] == "-t" and not title_appeared:
+                video_title = sys.argv[index + 1]
+                title_appeared = True
+            index += 1
 
-            # Keep the main thread running, otherwise signals are ignored.
-            # while True:
-            #    time.sleep(0.5)
+        parse_ok = enable_appeared and address_appeared and port_appeared and title_appeared
 
-        except ServiceExit:
-            # Terminate the running threads.
-            # Set the shutdown flag on each thread to trigger a clean shutdown of each thread.
-            lcd_thread.shutdown_flag.set()
-            youtube_thread.shutdown_flag.set()
-            # Wait for the threads to close...
-            lcd_thread.join()
-            youtube_thread.join()
+        if parse_ok:
+            print "LCD ENABLE = " + lcd_enable
+            print "LCD ADDRESS = " + lcd_address
+            print "LCD PORT = " + lcd_port
+            print "VIDEO TITLE = " + video_title
+
+            try:
+                if lcd_enable == "1":
+                    lcd_thread = LCDJob(video_title, int(lcd_address, 0), int(lcd_port))
+                    # int(lcd_address, 0) -> hex string to a integer
+                    lcd_thread.start()
+
+                youtube_thread = YoutubeJob(video_title, lcd_thread)
+                youtube_thread.start()
+
+                # Keep the main thread running, otherwise signals are ignored.
+                # while True:
+                #    time.sleep(0.5)
+
+            except ServiceExit:
+                # Terminate the running threads.
+                # Set the shutdown flag on each thread to trigger a clean shutdown of each thread.
+                lcd_thread.shutdown_flag.set()
+                youtube_thread.shutdown_flag.set()
+                # Wait for the threads to close...
+                lcd_thread.join()
+                youtube_thread.join()
+        else:
+            print "Bad syntax!"
+            usage()
 
     print 'Exiting main program'
 
